@@ -13,4 +13,5 @@ RUN npm ci
 
 # Bundle app source
 COPY . .
-CMD [ "node", "index.js" ]
+EXPOSE 8080
+CMD [ "node", "app.js" ]

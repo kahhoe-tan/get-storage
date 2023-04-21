@@ -1,15 +1,23 @@
+const express = require('express');
+const app = express();
+app.use(express.json());
+
 const { BlobServiceClient } = require('@azure/storage-blob');
 require("dotenv").config();
 
-async function main() {
+app.get('/', (req, res) => {
+  res.status(200).send('Welcome!');
+});
+
+app.get('/api/:sa/:container/:blob', async (req, res, next) => {
   try {
     var blobServiceClient
 
-    const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    var AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    AZURE_STORAGE_CONNECTION_STRING = AZURE_STORAGE_CONNECTION_STRING.replace(/[']/g, '')
     if (!AZURE_STORAGE_CONNECTION_STRING) {
       const { DefaultAzureCredential } = require('@azure/identity');
-      const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-      if (!accountName) throw Error('Azure Storage accountName not found');
+      const accountName = req.params.sa
       
       blobServiceClient = new BlobServiceClient(
         `https://${accountName}.blob.core.windows.net`,
@@ -21,15 +29,14 @@ async function main() {
       );
     }
 
-    const containerName = 'test'
-    const blobName = 'sample.json';
-
     // Get a reference to a container
+    const containerName = req.params.container
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
     // Get a block blob client
+    const blobName = req.params.blob
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
+    
     console.log('\nListing blobs...');
 
     // List the blob(s) in the container.
@@ -43,22 +50,23 @@ async function main() {
       );
     }
 
-    // Get blob content from position 0 to the end
-    // In Node.js, get downloaded data by accessing downloadBlockBlobResponse.readableStreamBody
-    // In browsers, get downloaded data by accessing downloadBlockBlobResponse.blobBody
     const downloadBlockBlobResponse = await blockBlobClient.download(0);
     console.log('\nDownloaded blob content...');
-    console.log(
-      '\t',
-      await streamToText(downloadBlockBlobResponse.readableStreamBody)
-    );
+    // console.log(
+    //   '\t',
+    //   await streamToText(downloadBlockBlobResponse.readableStreamBody)
+    // );
+
+    var blob = await streamToText(downloadBlockBlobResponse.readableStreamBody)
+    res.setHeader('content-type', 'application/json');
+    res.status(200).send(blob);
 
   } catch (err) {
-    console.err(`Error: ${err.message}`);
+    next(err)
   }
-}
 
-// Convert stream to text
+});
+
 async function streamToText(readable) {
   readable.setEncoding('utf8');
   let data = '';
@@ -68,6 +76,4 @@ async function streamToText(readable) {
   return data;
 }
 
-main()
-  .then(() => console.log("Done"))
-  .catch((ex) => console.log(ex.message));
+app.listen(8080, () => console.log(`Listening on port 8080..`));
