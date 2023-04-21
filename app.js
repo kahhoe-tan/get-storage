@@ -14,8 +14,9 @@ app.get('/api/:sa/:container/:blob', async (req, res, next) => {
     var blobServiceClient
 
     var AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
-    AZURE_STORAGE_CONNECTION_STRING = AZURE_STORAGE_CONNECTION_STRING.replace(/[']/g, '')
     if (!AZURE_STORAGE_CONNECTION_STRING) {
+      AZURE_STORAGE_CONNECTION_STRING = AZURE_STORAGE_CONNECTION_STRING.replace(/[']/g, '')
+      
       const { DefaultAzureCredential } = require('@azure/identity');
       const accountName = req.params.sa
       
