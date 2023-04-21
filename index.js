@@ -3,14 +3,23 @@ require("dotenv").config();
 
 async function main() {
   try {
-    const { DefaultAzureCredential } = require('@azure/identity');
-    const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-    if (!accountName) throw Error('Azure Storage accountName not found');
+    var blobServiceClient
 
-    const blobServiceClient = new BlobServiceClient(
-      `https://${accountName}.blob.core.windows.net`,
-      new DefaultAzureCredential()
-    );
+    const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    if (!AZURE_STORAGE_CONNECTION_STRING) {
+      const { DefaultAzureCredential } = require('@azure/identity');
+      const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+      if (!accountName) throw Error('Azure Storage accountName not found');
+      
+      blobServiceClient = new BlobServiceClient(
+        `https://${accountName}.blob.core.windows.net`,
+        new DefaultAzureCredential()
+      );
+    } else {
+      blobServiceClient = BlobServiceClient.fromConnectionString(
+        AZURE_STORAGE_CONNECTION_STRING
+      );
+    }
 
     const containerName = 'test'
     const blobName = 'sample.json';
