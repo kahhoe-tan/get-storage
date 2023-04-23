@@ -1,3 +1,3 @@
 # Introduction
 
-Simple application to get content from Azure blob storage
+Simple NodeJS application to get content from Azure blob storage
